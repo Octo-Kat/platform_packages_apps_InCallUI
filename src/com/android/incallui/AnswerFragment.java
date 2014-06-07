@@ -1,4 +1,8 @@
 /*
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2013 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -136,6 +140,28 @@ public class AnswerFragment extends BaseFragment<AnswerPresenter, AnswerPresente
     }
 
     @Override
+    public void showVideoButtons() {
+        Log.d(this, "ims video ");
+        final int targetResourceId = R.array.incoming_call_widget_6way_ims_targets;
+
+        if (targetResourceId != mGlowpad.getTargetResourceId()) {
+            // Answer, Decline, Respond via SMS, and Video options
+            // (VT,VoLTE,VT-TX,VT-RX)
+            mGlowpad.setTargetResources(R.array.incoming_call_widget_6way_ims_targets);
+            mGlowpad.setTargetDescriptionsResourceId(
+                    R.array.incoming_call_widget_6way_ims_target_descriptions);
+            mGlowpad.setDirectionDescriptionsResourceId(
+                    R.array.incoming_call_widget_6way_ims_direction_descriptions);
+
+            mGlowpad.reset(false);
+        }
+    }
+
+    public boolean isMessageDialogueShowing() {
+        return mCannedResponsePopup != null && mCannedResponsePopup.isShowing();
+    }
+
+    @Override
     public void showMessageDialog() {
         final ListView lv = new ListView(getActivity());
 
@@ -156,6 +182,7 @@ public class AnswerFragment extends BaseFragment<AnswerPresenter, AnswerPresente
             }
         });
         mCannedResponsePopup = builder.create();
+        mCannedResponsePopup.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
         mCannedResponsePopup.show();
     }
 
@@ -237,6 +264,13 @@ public class AnswerFragment extends BaseFragment<AnswerPresenter, AnswerPresente
                         getPresenter().onDismissDialog();
                     }
                 })
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialogInterface) {
+                        dismissCustomMessagePopup();
+                        getPresenter().onDismissDialog();
+                    }
+                })
                 .setTitle(R.string.respond_via_sms_custom_message);
         mCustomMessagePopup = builder.create();
 
@@ -261,6 +295,7 @@ public class AnswerFragment extends BaseFragment<AnswerPresenter, AnswerPresente
         // Keyboard up, show the dialog
         mCustomMessagePopup.getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        mCustomMessagePopup.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
         mCustomMessagePopup.show();
 
         // Send button starts out disabled
@@ -279,8 +314,8 @@ public class AnswerFragment extends BaseFragment<AnswerPresenter, AnswerPresente
     }
 
     @Override
-    public void onAnswer() {
-        getPresenter().onAnswer();
+    public void onAnswer(int callType) {
+        getPresenter().onAnswer(callType);
     }
 
     @Override
